@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { ImageIcon, Send, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ImageUpload from "@/components/moderation/ImageUpload";
+import { createPost } from "@/lib/database";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const CreatePost = () => {
   const [content, setContent] = useState("");
@@ -16,8 +18,34 @@ const CreatePost = () => {
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const createPostMutation = useMutation({
+    mutationFn: createPost,
+    onSuccess: () => {
+      // Invalidate posts query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      
+      // Reset form
+      setContent("");
+      setTags([]);
+      setImage(null);
+      setImagePreview(null);
+      
+      toast({
+        title: "Post created!",
+        description: "Your anonymous post has been published.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to create post",
+        description: error.message || "An error occurred while creating your post.",
+        variant: "destructive",
+      });
+    }
+  });
 
   const handleContentChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
@@ -84,22 +112,15 @@ const CreatePost = () => {
       return;
     }
     
-    setIsSubmitting(true);
+    // In a real app, we would upload the image to storage
+    // and get the URL to store in the database
+    const imageUrl = imagePreview;
     
-    // Simulate post submission
-    setTimeout(() => {
-      toast({
-        title: "Post created!",
-        description: "Your anonymous post has been published.",
-      });
-      
-      // Reset form
-      setContent("");
-      setTags([]);
-      setImage(null);
-      setImagePreview(null);
-      setIsSubmitting(false);
-    }, 1000);
+    createPostMutation.mutate({ 
+      content, 
+      tags, 
+      imageUrl 
+    });
   };
 
   return (
@@ -195,7 +216,7 @@ const CreatePost = () => {
           
           <Button
             type="submit"
-            disabled={isSubmitting || isUploading || !content.trim()}
+            disabled={createPostMutation.isPending || isUploading || !content.trim()}
             className="gap-2"
           >
             <Send className="h-4 w-4" />

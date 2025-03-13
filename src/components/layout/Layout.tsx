@@ -3,7 +3,8 @@ import { ReactNode, useState, FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ThemeToggle from "@/components/common/ThemeToggle";
 import AnimatedTransition from "@/components/common/AnimatedTransition";
-import { Bell, Menu, MessageSquare, Search, Tag, Users } from "lucide-react";
+import Notifications from "@/components/layout/Notifications";
+import { Menu, MessageSquare, Search, Tag, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
@@ -72,10 +73,7 @@ const Layout = ({ children }: LayoutProps) => {
           </form>
           
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full" />
-            </Button>
+            <Notifications />
             <ThemeToggle />
           </div>
         </div>

@@ -1,75 +1,22 @@
 
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import PostCard from "@/components/post/PostCard";
 import { Button } from "@/components/ui/button";
 import { Filter, X } from "lucide-react";
 import FilterPanel from "./FilterPanel";
+import { getPosts } from "@/lib/database";
+import { useQuery } from "@tanstack/react-query";
 
-// Dummy data for posts
-const dummyPosts = [
-  {
-    id: "1",
-    anonymousId: "a7f3e9b1",
-    content: "Just found out our department is getting a major upgrade to the computer labs next semester! New machines coming in with RTX graphics cards. 🔥 Has anyone heard more details about this?",
-    imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97",
-    tags: ["tech", "campus", "news"],
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    likes: 24,
-    dislikes: 2,
-    comments: 7,
-  },
-  {
-    id: "2",
-    anonymousId: "b3c1d9a7",
-    content: "The food at the North Campus dining hall has been terrible lately. Anyone else notice this or is it just me? I found something in my pasta yesterday that definitely wasn't supposed to be there...",
-    tags: ["food", "complaints"],
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    likes: 56,
-    dislikes: 3,
-    comments: 18,
-  },
-  {
-    id: "3",
-    anonymousId: "e5g7h9j2",
-    content: "Professor Wilson's surprise quiz today caught everyone off guard. Half the class probably failed. How is this fair when it wasn't on the syllabus?",
-    tags: ["academics", "professors"],
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
-    likes: 89,
-    dislikes: 7,
-    comments: 32,
-  },
-  {
-    id: "4",
-    anonymousId: "k4m6n8p1",
-    content: "Anyone looking for a study group for Dr. Lee's Organic Chemistry course? The final is coming up and I'm completely lost with reaction mechanisms.",
-    imageUrl: "https://images.unsplash.com/photo-1532153975070-2e9ab71f1b14",
-    tags: ["study", "chemistry", "help"],
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
-    likes: 15,
-    dislikes: 0,
-    comments: 9,
-  },
-  {
-    id: "5",
-    anonymousId: "q2s4u6w8",
-    content: "The new campus policy on overnight guests is ridiculous. We're adults paying for this housing, not children who need supervision.",
-    tags: ["policy", "housing", "complaints", "social"],
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    likes: 132,
-    dislikes: 8,
-    comments: 45,
-  },
-];
-
-// Extract all unique tags
-const allAvailableTags = [...new Set(dummyPosts.flatMap(post => post.tags))];
+// Extract all unique tags - we'll get this from the fetched posts
+const allAvailableTags: string[] = [];
 
 const PostList = () => {
-  const [posts, setPosts] = useState<typeof dummyPosts>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const location = useLocation();
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [allTags, setAllTags] = useState<string[]>([]);
   
   // Get search query from URL parameters
   useEffect(() => {
@@ -78,34 +25,25 @@ const PostList = () => {
     if (query) {
       setSearchQuery(query);
     }
-  }, []);
+  }, [location.search]);
 
+  // Fetch posts from database
+  const { data: posts = [], isLoading } = useQuery({
+    queryKey: ['posts', searchQuery, selectedTags],
+    queryFn: () => getPosts({ 
+      tags: selectedTags, 
+      searchQuery 
+    }),
+    refetchOnWindowFocus: true,
+  });
+
+  // Extract all unique tags from posts when posts change
   useEffect(() => {
-    // Simulate loading posts with a delay
-    const timer = setTimeout(() => {
-      let filteredPosts = [...dummyPosts];
-      
-      // Apply search filter if exists
-      if (searchQuery) {
-        filteredPosts = filteredPosts.filter(post => 
-          post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-        );
-      }
-      
-      // Apply tag filters if any
-      if (selectedTags.length > 0) {
-        filteredPosts = filteredPosts.filter(post => 
-          selectedTags.every(tag => post.tags.includes(tag))
-        );
-      }
-      
-      setPosts(filteredPosts);
-      setIsLoading(false);
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery, selectedTags]);
+    if (posts && posts.length > 0) {
+      const uniqueTags = [...new Set(posts.flatMap((post: any) => post.tags))];
+      setAllTags(uniqueTags);
+    }
+  }, [posts]);
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags(prev => 
@@ -193,27 +131,27 @@ const PostList = () => {
           selectedTags={selectedTags}
           onTagToggle={handleTagToggle}
           onClearFilters={() => setSelectedTags([])}
-          allTags={allAvailableTags}
+          allTags={allTags}
         />
       )}
       
-      {posts.map((post) => (
-        <PostCard
-          key={post.id}
-          id={post.id}
-          anonymousId={post.anonymousId}
-          content={post.content}
-          imageUrl={post.imageUrl}
-          tags={post.tags}
-          timestamp={post.timestamp}
-          likes={post.likes}
-          dislikes={post.dislikes}
-          comments={post.comments}
-          onTagClick={handleTagToggle}
-        />
-      ))}
-      
-      {posts.length === 0 && (
+      {posts.length > 0 ? (
+        posts.map((post: any) => (
+          <PostCard
+            key={post.id}
+            id={post.id}
+            anonymousId={post.anonymous_id}
+            content={post.content}
+            imageUrl={post.image_url}
+            tags={post.tags}
+            timestamp={new Date(post.created_at)}
+            likes={post.likes || 0}
+            dislikes={post.dislikes || 0}
+            comments={post.comments || 0}
+            onTagClick={handleTagToggle}
+          />
+        ))
+      ) : (
         <div className="text-center py-12 bg-card/50 rounded-lg border">
           <p className="text-muted-foreground">No posts match your filters. Try different search terms or tags.</p>
           <Button 
