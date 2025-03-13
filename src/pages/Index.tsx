@@ -1,13 +1,22 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import Layout from "@/components/layout/Layout";
+import CreatePost from "@/components/post/CreatePost";
+import PostList from "@/components/post/PostList";
+import AnimatedTransition from "@/components/common/AnimatedTransition";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <Layout>
+      <div className="max-w-3xl mx-auto">
+        <AnimatedTransition animationType="scale" delay={100}>
+          <CreatePost />
+        </AnimatedTransition>
+        
+        <AnimatedTransition animationType="fade" delay={300}>
+          <PostList />
+        </AnimatedTransition>
       </div>
-    </div>
+    </Layout>
   );
 };
 
