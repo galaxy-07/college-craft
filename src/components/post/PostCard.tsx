@@ -25,6 +25,7 @@ interface PostCardProps {
   comments: number;
   userLiked?: boolean;
   userDisliked?: boolean;
+  onTagClick?: (tag: string) => void;
 }
 
 const PostCard = ({
@@ -39,6 +40,7 @@ const PostCard = ({
   comments,
   userLiked = false,
   userDisliked = false,
+  onTagClick,
 }: PostCardProps) => {
   const [likeCount, setLikeCount] = useState(likes);
   const [dislikeCount, setDislikeCount] = useState(dislikes);
@@ -151,7 +153,15 @@ const PostCard = ({
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
             {tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
+              <Badge 
+                key={tag} 
+                variant="secondary" 
+                className={cn(
+                  "text-xs",
+                  onTagClick && "cursor-pointer hover:bg-secondary"
+                )}
+                onClick={() => onTagClick && onTagClick(tag)}
+              >
                 #{tag}
               </Badge>
             ))}
