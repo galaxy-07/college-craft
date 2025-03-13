@@ -4,10 +4,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import ThemeToggle from "@/components/common/ThemeToggle";
 import AnimatedTransition from "@/components/common/AnimatedTransition";
 import Notifications from "@/components/layout/Notifications";
-import { Menu, MessageSquare, Search, Tag, Users } from "lucide-react";
+import { Menu, MessageSquare, Search, Tag, Users, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/context/AuthContext";
 
 interface LayoutProps {
   children: ReactNode;
@@ -16,6 +17,7 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, signOut, isLoading } = useAuth();
   const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
   const [searchValue, setSearchValue] = useState("");
 
@@ -39,6 +41,11 @@ const Layout = ({ children }: LayoutProps) => {
     }
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
+  };
+
   if (isAuthPage) {
     return (
       <div className="min-h-screen w-full bg-background flex items-center justify-center p-4">
@@ -47,6 +54,12 @@ const Layout = ({ children }: LayoutProps) => {
         </AnimatedTransition>
       </div>
     );
+  }
+
+  // If not logged in and not on an auth page, redirect to login
+  if (!isLoading && !user && !isAuthPage) {
+    navigate('/login');
+    return null;
   }
 
   return (
@@ -75,6 +88,16 @@ const Layout = ({ children }: LayoutProps) => {
           <div className="flex items-center gap-2">
             <Notifications />
             <ThemeToggle />
+            {user && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleSignOut}
+                title="Sign out"
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
+            )}
           </div>
         </div>
       </header>

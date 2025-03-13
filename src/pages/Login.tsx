@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,12 +8,14 @@ import { Label } from "@/components/ui/label";
 import ThemeToggle from "@/components/common/ThemeToggle";
 import AnimatedTransition from "@/components/common/AnimatedTransition";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,19 +31,34 @@ const Login = () => {
     
     setIsLoading(true);
     
-    // Simulate login process
-    setTimeout(() => {
-      // For demo purposes, we'll simulate a successful login
+    try {
+      // Attempt to sign in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
       toast({
         title: "Login successful",
         description: "Welcome back to CampusAnon!",
       });
       
-      // In a real app, we would redirect to the home page or dashboard
-      window.location.href = "/";
-      
+      // Redirect to home page
+      navigate("/");
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        title: "Login failed",
+        description: error.message || "Please check your credentials and try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (

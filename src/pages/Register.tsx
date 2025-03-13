@@ -1,7 +1,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,9 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   displayName: z
@@ -73,6 +76,10 @@ const colleges = [
 ];
 
 const Register = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -84,9 +91,43 @@ const Register = () => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    // Here you would usually make a request to your authentication API
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
+    
+    try {
+      // Sign up with Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: {
+            display_name: values.displayName,
+            college: values.college,
+          }
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Registration successful",
+        description: "Welcome to CampusAnon! Please check your email to confirm your account.",
+      });
+      
+      // Redirect to home page
+      navigate("/");
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast({
+        title: "Registration failed",
+        description: error.message || "Please try again with a different email.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -202,8 +243,8 @@ const Register = () => {
             )}
           />
           
-          <Button type="submit" className="w-full">
-            Register
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Creating account..." : "Register"}
           </Button>
         </form>
       </Form>

@@ -3,6 +3,7 @@ import { useState, ChangeEvent, FormEvent } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPost } from "@/lib/database";
+import { useAuth } from "@/context/AuthContext";
 
 export const useCreatePost = () => {
   const [content, setContent] = useState("");
@@ -12,6 +13,7 @@ export const useCreatePost = () => {
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const createPostMutation = useMutation({
     mutationFn: createPost,
