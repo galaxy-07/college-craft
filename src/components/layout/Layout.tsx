@@ -1,6 +1,6 @@
 
-import { ReactNode } from "react";
-import { useLocation } from "react-router-dom";
+import { ReactNode, useState, FormEvent } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import ThemeToggle from "@/components/common/ThemeToggle";
 import AnimatedTransition from "@/components/common/AnimatedTransition";
 import { Bell, Menu, MessageSquare, Search, Tag, Users } from "lucide-react";
@@ -14,7 +14,29 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
+  const [searchValue, setSearchValue] = useState("");
+
+  // Extract search query from URL on component mount
+  useState(() => {
+    if (location.search) {
+      const params = new URLSearchParams(location.search);
+      const query = params.get('q');
+      if (query) {
+        setSearchValue(query);
+      }
+    }
+  });
+
+  const handleSearch = (e: FormEvent) => {
+    e.preventDefault();
+    if (searchValue.trim()) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('q', searchValue.trim());
+      navigate(`${location.pathname}?${url.searchParams.toString()}`);
+    }
+  };
 
   if (isAuthPage) {
     return (
@@ -38,13 +60,16 @@ const Layout = ({ children }: LayoutProps) => {
             <h1 className="text-xl font-semibold tracking-tight">Campus<span className="text-primary">Anon</span></h1>
           </div>
           
-          <div className="hidden md:flex items-center relative max-w-md w-full">
+          <form onSubmit={handleSearch} className="hidden md:flex items-center relative max-w-md w-full">
             <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
             <Input 
               placeholder="Search posts, tags, or topics..."
               className="pl-10 bg-secondary/50"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
             />
-          </div>
+            <Button type="submit" className="sr-only">Search</Button>
+          </form>
           
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="relative">
@@ -62,7 +87,14 @@ const Layout = ({ children }: LayoutProps) => {
         <aside className="w-64 border-r hidden lg:block fixed h-[calc(100vh-4rem)] top-16">
           <nav className="p-4 h-full flex flex-col">
             <div className="space-y-2">
-              <Button variant="ghost" className="w-full justify-start gap-3 font-medium">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start gap-3 font-medium"
+                onClick={() => {
+                  navigate('/');
+                  setSearchValue("");
+                }}
+              >
                 <MessageSquare className="h-5 w-5" />
                 <span>All Posts</span>
               </Button>
@@ -81,11 +113,46 @@ const Layout = ({ children }: LayoutProps) => {
             <div className="space-y-3">
               <h3 className="font-semibold text-sm text-muted-foreground px-4">POPULAR TAGS</h3>
               <div className="space-y-1">
-                <Button variant="ghost" size="sm" className="w-full justify-start text-sm font-normal">#events</Button>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-sm font-normal">#academics</Button>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-sm font-normal">#campus</Button>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-sm font-normal">#questions</Button>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-sm font-normal">#social</Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full justify-start text-sm font-normal"
+                  onClick={() => navigate('/?q=%23events')}
+                >
+                  #events
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full justify-start text-sm font-normal"
+                  onClick={() => navigate('/?q=%23academics')}
+                >
+                  #academics
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full justify-start text-sm font-normal"
+                  onClick={() => navigate('/?q=%23campus')}
+                >
+                  #campus
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full justify-start text-sm font-normal"
+                  onClick={() => navigate('/?q=%23questions')}
+                >
+                  #questions
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full justify-start text-sm font-normal"
+                  onClick={() => navigate('/?q=%23social')}
+                >
+                  #social
+                </Button>
               </div>
             </div>
             
