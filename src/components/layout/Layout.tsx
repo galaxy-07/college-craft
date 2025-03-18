@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import ThemeToggle from "@/components/common/ThemeToggle";
 import AnimatedTransition from "@/components/common/AnimatedTransition";
 import Notifications from "@/components/layout/Notifications";
-import { Menu, MessageSquare, Search, Tag, Users, LogOut } from "lucide-react";
+import { Menu, MessageSquare, Search, Tag, Users, LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
@@ -43,7 +43,7 @@ const Layout = ({ children }: LayoutProps) => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/login');
+    navigate('/');
   };
 
   if (isAuthPage) {
@@ -56,12 +56,7 @@ const Layout = ({ children }: LayoutProps) => {
     );
   }
 
-  // If not logged in and not on an auth page, redirect to login
-  if (!isLoading && !user && !isAuthPage) {
-    navigate('/login');
-    return null;
-  }
-
+  // Allow anonymous browsing - no redirect to login
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
@@ -88,7 +83,7 @@ const Layout = ({ children }: LayoutProps) => {
           <div className="flex items-center gap-2">
             <Notifications />
             <ThemeToggle />
-            {user && (
+            {user ? (
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -96,6 +91,15 @@ const Layout = ({ children }: LayoutProps) => {
                 title="Sign out"
               >
                 <LogOut className="h-5 w-5" />
+              </Button>
+            ) : (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate('/login')}
+                title="Sign in"
+              >
+                <LogIn className="h-5 w-5" />
               </Button>
             )}
           </div>

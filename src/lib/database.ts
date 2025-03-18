@@ -100,7 +100,7 @@ export const getTrendingTags = async (limit = 5) => {
   }
   
   // Count tag occurrences and sort by popularity
-  const tagCounts = {};
+  const tagCounts: Record<string, number> = {};
   data.forEach(post => {
     if (post.tags && Array.isArray(post.tags)) {
       post.tags.forEach(tag => {
