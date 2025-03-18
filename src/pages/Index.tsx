@@ -71,12 +71,14 @@ const Index = () => {
         )}
         
         <AnimatedTransition animationType="fade" delay={hasSearch ? 100 : 300}>
-          <TabsContent value="recent" className="mt-0">
-            <PostList sortBy="recent" />
-          </TabsContent>
-          <TabsContent value="trending" className="mt-0">
-            <PostList sortBy="trending" />
-          </TabsContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsContent value="recent" className="mt-0">
+              <PostList sortBy="recent" />
+            </TabsContent>
+            <TabsContent value="trending" className="mt-0">
+              <PostList sortBy="trending" />
+            </TabsContent>
+          </Tabs>
         </AnimatedTransition>
       </div>
     </Layout>
