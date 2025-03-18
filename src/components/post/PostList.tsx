@@ -8,10 +8,11 @@ import FilterPanel from "./FilterPanel";
 import { getPosts } from "@/lib/database";
 import { useQuery } from "@tanstack/react-query";
 
-// Extract all unique tags - we'll get this from the fetched posts
-const allAvailableTags: string[] = [];
+interface PostListProps {
+  sortBy?: 'recent' | 'trending';
+}
 
-const PostList = () => {
+const PostList = ({ sortBy = 'recent' }: PostListProps) => {
   const location = useLocation();
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -29,7 +30,7 @@ const PostList = () => {
 
   // Fetch posts from database
   const { data: posts = [], isLoading } = useQuery({
-    queryKey: ['posts', searchQuery, selectedTags],
+    queryKey: ['posts', searchQuery, selectedTags, sortBy],
     queryFn: () => getPosts({ 
       tags: selectedTags, 
       searchQuery 
@@ -44,6 +45,19 @@ const PostList = () => {
       setAllTags(uniqueTags);
     }
   }, [posts]);
+
+  // Sort posts based on the sortBy prop
+  const sortedPosts = [...posts].sort((a, b) => {
+    if (sortBy === 'trending') {
+      // Sort by total engagement (likes + comments)
+      const engagementA = (a.likes || 0) + (a.comments || 0);
+      const engagementB = (b.likes || 0) + (b.comments || 0);
+      return engagementB - engagementA;
+    } else {
+      // Default sort by recent (date)
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+  });
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags(prev => 
@@ -94,12 +108,12 @@ const PostList = () => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold tracking-tight">
+        <h2 className="text-lg font-medium">
           {searchQuery 
-            ? `Search results for "${searchQuery}"` 
+            ? `Results for "${searchQuery}"` 
             : selectedTags.length > 0 
               ? "Filtered Posts" 
-              : "Recent Posts"
+              : sortBy === 'trending' ? "Trending Posts" : "Recent Posts"
           }
         </h2>
         <div className="flex items-center gap-2">
@@ -135,8 +149,8 @@ const PostList = () => {
         />
       )}
       
-      {posts.length > 0 ? (
-        posts.map((post: any) => (
+      {sortedPosts.length > 0 ? (
+        sortedPosts.map((post: any) => (
           <PostCard
             key={post.id}
             id={post.id}

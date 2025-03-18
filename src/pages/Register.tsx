@@ -131,23 +131,23 @@ const Register = () => {
   }
 
   return (
-    <div className="space-y-8 w-full">
-      <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">Create an account</h1>
-        <p className="text-muted-foreground">
+    <div className="flex flex-col items-center max-w-md w-full mx-auto p-4 space-y-6">
+      <div className="text-center space-y-2">
+        <h1 className="text-2xl md:text-3xl font-bold">Create an account</h1>
+        <p className="text-sm md:text-base text-muted-foreground">
           Join the discussion with students from your college
         </p>
       </div>
 
-      <Alert variant="default" className="bg-primary/10 border-primary/20">
-        <AlertDescription className="flex items-center gap-2 text-sm">
-          <Info className="h-4 w-4" />
+      <Alert variant="default" className="bg-primary/10 border-primary/20 w-full">
+        <AlertDescription className="flex items-center gap-2 text-xs md:text-sm">
+          <Info className="h-4 w-4 flex-shrink-0" />
           You'll need to verify your college email to join your campus group
         </AlertDescription>
       </Alert>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 w-full">
           <FormField
             control={form.control}
             name="displayName"

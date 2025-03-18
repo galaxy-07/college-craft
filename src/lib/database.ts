@@ -71,3 +71,47 @@ export const getNotifications = async () => {
   
   return data;
 };
+
+// Update post likes/dislikes
+export const updatePostEngagement = async (postId, field, value) => {
+  const { data, error } = await supabase
+    .from('posts')
+    .update({ [field]: value })
+    .eq('id', postId)
+    .select();
+    
+  if (error) {
+    console.error(`Error updating post ${field}:`, error);
+    throw error;
+  }
+  
+  return data?.[0];
+};
+
+// Get trending tags
+export const getTrendingTags = async (limit = 5) => {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('tags');
+    
+  if (error) {
+    console.error('Error fetching tags for trending:', error);
+    return [];
+  }
+  
+  // Count tag occurrences and sort by popularity
+  const tagCounts = {};
+  data.forEach(post => {
+    if (post.tags && Array.isArray(post.tags)) {
+      post.tags.forEach(tag => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+      });
+    }
+  });
+  
+  // Convert to array and sort
+  return Object.entries(tagCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([tag]) => tag);
+};
