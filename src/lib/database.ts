@@ -72,7 +72,7 @@ export const getNotifications = async () => {
   return data;
 };
 
-// Update post likes/dislikes
+// Update post likes/dislikes/comments
 export const updatePostEngagement = async (postId, field, value) => {
   const { data, error } = await supabase
     .from('posts')
@@ -114,4 +114,59 @@ export const getTrendingTags = async (limit = 5) => {
     .sort((a, b) => b[1] - a[1])
     .slice(0, limit)
     .map(([tag]) => tag);
+};
+
+// Comments
+export const getComments = async (postId) => {
+  const { data, error } = await supabase
+    .from('comments')
+    .select('*')
+    .eq('post_id', postId)
+    .order('created_at', { ascending: true });
+    
+  if (error) {
+    console.error('Error fetching comments:', error);
+    return [];
+  }
+  
+  return data;
+};
+
+export const createComment = async ({ postId, content, parentId = null }) => {
+  const { data, error } = await supabase
+    .from('comments')
+    .insert([
+      {
+        post_id: postId,
+        content,
+        parent_id: parentId,
+        anonymous_id: generateAnonymousId(),
+      },
+    ])
+    .select();
+  
+  if (error) {
+    console.error('Error creating comment:', error);
+    throw error;
+  }
+  
+  // Also increment the comments count on the post
+  await updatePostEngagement(postId, 'comments', await getCommentCount(postId));
+  
+  return data?.[0];
+};
+
+// Helper to get comment count for a post
+export const getCommentCount = async (postId) => {
+  const { count, error } = await supabase
+    .from('comments')
+    .select('*', { count: 'exact', head: true })
+    .eq('post_id', postId);
+    
+  if (error) {
+    console.error('Error counting comments:', error);
+    return 0;
+  }
+  
+  return count || 0;
 };

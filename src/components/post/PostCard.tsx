@@ -1,11 +1,14 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Flag, MessageSquare, MoreHorizontal, ThumbsDown, ThumbsUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { updatePostEngagement } from "@/lib/database";
+import { useToast } from "@/hooks/use-toast";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import CommentsSection from "./CommentsSection";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,35 +47,80 @@ const PostCard = ({
 }: PostCardProps) => {
   const [likeCount, setLikeCount] = useState(likes);
   const [dislikeCount, setDislikeCount] = useState(dislikes);
+  const [commentCount, setCommentCount] = useState(comments);
   const [isLiked, setIsLiked] = useState(userLiked);
   const [isDisliked, setIsDisliked] = useState(userDisliked);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const { toast } = useToast();
 
-  const handleLike = () => {
-    if (isLiked) {
-      setLikeCount((prev) => prev - 1);
-      setIsLiked(false);
-    } else {
-      setLikeCount((prev) => prev + 1);
-      setIsLiked(true);
-      if (isDisliked) {
-        setDislikeCount((prev) => prev - 1);
-        setIsDisliked(false);
+  const handleLike = async () => {
+    try {
+      if (isLiked) {
+        // Unlike
+        const newCount = likeCount - 1;
+        setLikeCount(newCount);
+        setIsLiked(false);
+        await updatePostEngagement(id, 'likes', newCount);
+      } else {
+        // Like
+        const newCount = likeCount + 1;
+        setLikeCount(newCount);
+        setIsLiked(true);
+        await updatePostEngagement(id, 'likes', newCount);
+        
+        // If it was disliked, remove dislike
+        if (isDisliked) {
+          const newDislikeCount = dislikeCount - 1;
+          setDislikeCount(newDislikeCount);
+          setIsDisliked(false);
+          await updatePostEngagement(id, 'dislikes', newDislikeCount);
+        }
       }
+    } catch (error) {
+      toast({
+        title: "Error updating like",
+        description: "There was a problem saving your reaction.",
+        variant: "destructive",
+      });
+      // Revert state on error
+      setLikeCount(likes);
+      setIsLiked(userLiked);
     }
   };
 
-  const handleDislike = () => {
-    if (isDisliked) {
-      setDislikeCount((prev) => prev - 1);
-      setIsDisliked(false);
-    } else {
-      setDislikeCount((prev) => prev + 1);
-      setIsDisliked(true);
-      if (isLiked) {
-        setLikeCount((prev) => prev - 1);
-        setIsLiked(false);
+  const handleDislike = async () => {
+    try {
+      if (isDisliked) {
+        // Remove dislike
+        const newCount = dislikeCount - 1;
+        setDislikeCount(newCount);
+        setIsDisliked(false);
+        await updatePostEngagement(id, 'dislikes', newCount);
+      } else {
+        // Dislike
+        const newCount = dislikeCount + 1;
+        setDislikeCount(newCount);
+        setIsDisliked(true);
+        await updatePostEngagement(id, 'dislikes', newCount);
+        
+        // If it was liked, remove like
+        if (isLiked) {
+          const newLikeCount = likeCount - 1;
+          setLikeCount(newLikeCount);
+          setIsLiked(false);
+          await updatePostEngagement(id, 'likes', newLikeCount);
+        }
       }
+    } catch (error) {
+      toast({
+        title: "Error updating dislike",
+        description: "There was a problem saving your reaction.",
+        variant: "destructive",
+      });
+      // Revert state on error
+      setDislikeCount(dislikes);
+      setIsDisliked(userDisliked);
     }
   };
 
@@ -97,8 +145,17 @@ const PostCard = ({
     return Math.floor(seconds) + " seconds";
   };
 
+  const toggleComments = () => {
+    setShowComments(!showComments);
+  };
+
+  // Update comment count when it changes
+  useEffect(() => {
+    setCommentCount(comments);
+  }, [comments]);
+
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-md">
+    <Card className="overflow-hidden transition-all duration-300 hover:shadow-md mb-4">
       <CardHeader className="py-3 px-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -169,42 +226,52 @@ const PostCard = ({
         )}
       </CardContent>
       
-      <CardFooter className="px-4 py-2 flex justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "flex items-center gap-1 h-8 px-2",
-              isLiked && "text-primary"
-            )}
-            onClick={handleLike}
-          >
-            <ThumbsUp className="h-4 w-4" />
-            <span className="text-xs">{likeCount}</span>
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "flex items-center gap-1 h-8 px-2",
-              isDisliked && "text-destructive"
-            )}
-            onClick={handleDislike}
-          >
-            <ThumbsDown className="h-4 w-4" />
-            <span className="text-xs">{dislikeCount}</span>
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex items-center gap-1 h-8 px-2"
-          >
-            <MessageSquare className="h-4 w-4" />
-            <span className="text-xs">{comments}</span>
-          </Button>
+      <CardFooter className="px-4 py-2 flex flex-col">
+        <div className="flex justify-between w-full">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "flex items-center gap-1 h-8 px-2",
+                isLiked && "text-primary"
+              )}
+              onClick={handleLike}
+            >
+              <ThumbsUp className="h-4 w-4" />
+              <span className="text-xs">{likeCount}</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "flex items-center gap-1 h-8 px-2",
+                isDisliked && "text-destructive"
+              )}
+              onClick={handleDislike}
+            >
+              <ThumbsDown className="h-4 w-4" />
+              <span className="text-xs">{dislikeCount}</span>
+            </Button>
+            
+            <Collapsible open={showComments} onOpenChange={setShowComments} className="w-full">
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-1 h-8 px-2"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="text-xs">{commentCount}</span>
+                </Button>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent className="mt-2">
+                <CommentsSection postId={id} onCommentAdded={() => setCommentCount(prev => prev + 1)} />
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
         </div>
       </CardFooter>
     </Card>
