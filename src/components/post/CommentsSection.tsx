@@ -7,7 +7,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { MessageSquare, CornerDownRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Define the comment interface
+// Define the comment interface to match the database structure
 interface Comment {
   id: string;
   post_id: string;
@@ -36,7 +36,7 @@ const CommentsSection = ({ postId, onCommentAdded }: CommentsSectionProps) => {
       try {
         setLoadingComments(true);
         const data = await getComments(postId);
-        setComments(data);
+        setComments(data as Comment[]);
       } catch (error) {
         console.error("Error fetching comments:", error);
         toast({
@@ -63,7 +63,7 @@ const CommentsSection = ({ postId, onCommentAdded }: CommentsSectionProps) => {
         parentId: replyTo,
       });
       
-      setComments([...comments, comment]);
+      setComments([...comments, comment as Comment]);
       setNewComment("");
       setReplyTo(null);
       onCommentAdded();

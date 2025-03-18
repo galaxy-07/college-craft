@@ -42,13 +42,11 @@ const Index = () => {
           </div>
         </AnimatedTransition>
         
-        {!hasSearch && (
-          <AnimatedTransition animationType="scale" delay={100}>
-            <CreatePost />
-          </AnimatedTransition>
-        )}
+        <AnimatedTransition animationType="scale" delay={100}>
+          <CreatePost />
+        </AnimatedTransition>
         
-        <AnimatedTransition animationType="fade" delay={hasSearch ? 100 : 300}>
+        <AnimatedTransition animationType="fade" delay={300}>
           <Tabs value={activeTab} className="w-full">
             <TabsContent value="recent" className="mt-0">
               <PostList sortBy="recent" />
