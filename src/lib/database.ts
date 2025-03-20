@@ -170,3 +170,32 @@ export const getCommentCount = async (postId) => {
   
   return count || 0;
 };
+
+// Upload image to Supabase storage
+export const uploadImage = async (file: File): Promise<string | null> => {
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    const filePath = `${fileName}`;
+    
+    // Upload the file to Supabase storage
+    const { error: uploadError, data } = await supabase.storage
+      .from('post-images')
+      .upload(filePath, file);
+      
+    if (uploadError) {
+      console.error('Error uploading image:', uploadError);
+      return null;
+    }
+    
+    // Get the public URL for the uploaded file
+    const { data: { publicUrl } } = supabase.storage
+      .from('post-images')
+      .getPublicUrl(filePath);
+      
+    return publicUrl;
+  } catch (error) {
+    console.error('Error in image upload process:', error);
+    return null;
+  }
+};

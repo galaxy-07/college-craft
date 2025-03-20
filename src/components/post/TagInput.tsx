@@ -37,6 +37,13 @@ const TagInput = ({ tags, setTags }: TagInputProps) => {
         description: "You can only add up to 5 tags per post.",
         variant: "destructive",
       });
+    } else if (tags.includes(newTag)) {
+      toast({
+        title: "Tag already added",
+        description: "This tag is already in your list.",
+        variant: "destructive",
+      });
+      setTagInput("");
     }
   };
 
@@ -63,15 +70,27 @@ const TagInput = ({ tags, setTags }: TagInputProps) => {
         ))}
       </div>
       
-      <Input
-        placeholder="Add tags (press Enter)"
-        value={tagInput}
-        onChange={handleTagInputChange}
-        onKeyDown={handleTagInputKeyDown}
-        className="bg-secondary/30"
-        maxLength={20}
-        disabled={tags.length >= 5}
-      />
+      <div className="flex items-center gap-2">
+        <Input
+          placeholder="Add tags (press Enter)"
+          value={tagInput}
+          onChange={handleTagInputChange}
+          onKeyDown={handleTagInputKeyDown}
+          className="bg-secondary/30"
+          maxLength={20}
+          disabled={tags.length >= 5}
+        />
+        
+        <Button 
+          type="button" 
+          size="sm" 
+          variant="secondary"
+          onClick={addTag}
+          disabled={!tagInput.trim() || tags.length >= 5}
+        >
+          Add
+        </Button>
+      </div>
     </>
   );
 };

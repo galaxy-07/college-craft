@@ -2,7 +2,7 @@
 import { useState, ChangeEvent, FormEvent } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createPost } from "@/lib/database";
+import { createPost, uploadImage } from "@/lib/database";
 
 export const useCreatePost = () => {
   const [content, setContent] = useState("");
@@ -14,7 +14,20 @@ export const useCreatePost = () => {
   const queryClient = useQueryClient();
 
   const createPostMutation = useMutation({
-    mutationFn: createPost,
+    mutationFn: async ({ content, tags, image }: { content: string, tags: string[], image: File | null }) => {
+      let imageUrl = null;
+      
+      // If an image was selected, upload it first
+      if (image) {
+        imageUrl = await uploadImage(image);
+        if (!imageUrl) {
+          throw new Error("Failed to upload image");
+        }
+      }
+      
+      // Then create the post with the image URL
+      return createPost({ content, tags, imageUrl });
+    },
     onSuccess: () => {
       // Invalidate posts query to refresh the list
       queryClient.invalidateQueries({ queryKey: ['posts'] });
@@ -75,14 +88,10 @@ export const useCreatePost = () => {
       return;
     }
     
-    // In a real app, we would upload the image to storage
-    // and get the URL to store in the database
-    const imageUrl = imagePreview;
-    
     createPostMutation.mutate({ 
       content, 
       tags, 
-      imageUrl 
+      image 
     });
   };
 

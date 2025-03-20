@@ -39,33 +39,35 @@ const CreatePost = () => {
             removeImage={removeImage} 
           />
           
-          <div className="flex gap-2">
-            <TagInput tags={tags} setTags={setTags} />
-            
-            <ImageUpload
-              onSuccess={handleImageSuccess}
-              onError={handleImageError}
-              onStartUpload={() => setIsUploading(true)}
-            >
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                disabled={!!imagePreview || isUploading}
-                className="shrink-0"
-              >
-                <ImageIcon className="h-4 w-4" />
-              </Button>
-            </ImageUpload>
-          </div>
+          <TagInput tags={tags} setTags={setTags} />
           
-          <div className="flex justify-between items-center mt-2">
-            <p className="text-xs text-muted-foreground">
-              {content.length}/500 characters
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {tags.length}/5 tags
-            </p>
+          <div className="flex justify-between items-center mt-4">
+            <div className="flex gap-2 items-center">
+              <ImageUpload
+                onSuccess={handleImageSuccess}
+                onError={handleImageError}
+                onStartUpload={() => setIsUploading(true)}
+              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  disabled={!!imagePreview || isUploading}
+                  className="shrink-0"
+                >
+                  <ImageIcon className="h-4 w-4" />
+                </Button>
+              </ImageUpload>
+              
+              {isUploading && (
+                <span className="text-xs text-muted-foreground">Uploading image...</span>
+              )}
+            </div>
+            
+            <div className="flex gap-4 text-xs text-muted-foreground">
+              <span>{content.length}/500 characters</span>
+              <span>{tags.length}/5 tags</span>
+            </div>
           </div>
         </CardContent>
         
