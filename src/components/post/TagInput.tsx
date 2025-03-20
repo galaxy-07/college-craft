@@ -27,24 +27,47 @@ const TagInput = ({ tags, setTags }: TagInputProps) => {
   };
 
   const addTag = () => {
-    const newTag = tagInput.trim().toLowerCase().replace(/\s+/g, "-");
-    if (newTag && !tags.includes(newTag) && tags.length < 5) {
-      setTags([...tags, newTag]);
-      setTagInput("");
-    } else if (tags.length >= 5) {
+    const trimmedInput = tagInput.trim();
+    
+    if (!trimmedInput) {
+      return;
+    }
+    
+    // Format tag: lowercase, replace spaces with hyphens
+    const newTag = trimmedInput.toLowerCase().replace(/\s+/g, "-");
+    
+    // Validate tag
+    if (newTag.length > 20) {
       toast({
-        title: "Maximum tags reached",
-        description: "You can only add up to 5 tags per post.",
+        title: "Tag too long",
+        description: "Tags must be 20 characters or less.",
         variant: "destructive",
       });
-    } else if (tags.includes(newTag)) {
+      return;
+    }
+    
+    if (tags.includes(newTag)) {
       toast({
         title: "Tag already added",
         description: "This tag is already in your list.",
         variant: "destructive",
       });
       setTagInput("");
+      return;
     }
+    
+    if (tags.length >= 5) {
+      toast({
+        title: "Maximum tags reached",
+        description: "You can only add up to 5 tags per post.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Add tag and clear input
+    setTags([...tags, newTag]);
+    setTagInput("");
   };
 
   const removeTag = (tagToRemove: string) => {
