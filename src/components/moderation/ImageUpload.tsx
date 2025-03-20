@@ -1,6 +1,5 @@
 
 import { useState, ReactNode, ChangeEvent } from "react";
-import { Button } from "@/components/ui/button";
 
 interface ImageUploadProps {
   children: ReactNode;
@@ -104,7 +103,7 @@ const ImageUpload = ({
         id={`image-upload-${inputKey}`}
         key={inputKey}
       />
-      <label htmlFor={`image-upload-${inputKey}`}>
+      <label htmlFor={`image-upload-${inputKey}`} className="cursor-pointer">
         {children}
       </label>
     </div>

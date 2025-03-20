@@ -53,7 +53,6 @@ const CreatePost = () => {
                   variant="outline"
                   size="icon"
                   disabled={!!imagePreview || isUploading}
-                  className="shrink-0"
                 >
                   <ImageIcon className="h-4 w-4" />
                 </Button>
